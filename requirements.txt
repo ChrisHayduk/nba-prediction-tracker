@@ -1,0 +1,5 @@
+flask
+pandas
+nba_api
+openpyxl
+gunicorn
