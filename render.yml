@@ -3,4 +3,4 @@ services:
     name: nba-predictions
     runtime: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn main:app
+    startCommand: gunicorn app:app
