@@ -52,8 +52,17 @@
     <script>
         // Fetch data from the backend and display it
         fetch('/api/all_data')
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
+                if (!data || data.error) {
+                    throw new Error(data.error || 'No data received');
+                }
+                console.log("Received data:", data);  // Debug print
                 // Sort data by Projected Wins in descending order
                 data.sort((a, b) => b["Projected Wins"] - a["Projected Wins"]);
                 
@@ -114,7 +123,12 @@
                     summaryBody.appendChild(row);
                 });
             })
-            .catch(error => console.error('Error fetching team data:', error));
+            .catch(error => {
+                console.error('Error fetching team data:', error);
+                document.getElementById('team-data').innerHTML = `
+                    <tr><td colspan="7">Error loading data: ${error.message}</td></tr>
+                `;
+            });
     </script>
 </body>
 </html>

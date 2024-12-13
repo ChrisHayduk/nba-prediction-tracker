@@ -315,12 +315,14 @@ over_under_data['Team'] = over_under_data['Team'].apply(
 
 # Helper function to fetch win percentages
 def fetch_win_percentages():
-    standings = leaguestandings.LeagueStandings().get_data_frames()[0]
-    # Print the team names from the API for debugging
-    print("API Team Names:", standings['TeamName'].tolist())
-    standings = standings[['TeamName', 'WinPCT']]
-    standings['WinPCT'] = standings['WinPCT'].astype(float)
-    return standings
+    try:
+        standings = leaguestandings.LeagueStandings().get_data_frames()[0]
+        standings = standings[['TeamName', 'WinPCT']]
+        standings['WinPCT'] = standings['WinPCT'].astype(float)
+        return standings
+    except Exception as e:
+        print(f"Error fetching standings: {str(e)}")
+        return pd.DataFrame(columns=['TeamName', 'WinPCT'])
 
 # Calculate projections and grades
 def calculate_projections():
@@ -345,19 +347,25 @@ def projections():
 
 @app.route('/api/all_data')
 def all_data():
-    over_under_data.dropna(inplace=True)
+    try:
+        over_under_data.dropna(inplace=True)
 
-    # Get projections data
-    projections_data = calculate_projections()
-    
-    # Merge with original over_under_data
-    complete_data = over_under_data.merge(
-        projections_data[['Team', 'WinPCT', 'Projected Wins', 'Grade']], 
-        on='Team', 
-        how='left'
-    )
-    print(complete_data)
-    return jsonify(complete_data.to_dict(orient='records'))
+        # Get projections data
+        projections_data = calculate_projections()
+        
+        # Merge with original over_under_data
+        complete_data = over_under_data.merge(
+            projections_data[['Team', 'WinPCT', 'Projected Wins', 'Grade']], 
+            on='Team', 
+            how='left'
+        )
+        
+        result = complete_data.to_dict(orient='records')
+        print("Returning data:", result)  # Debug print
+        return jsonify(result)
+    except Exception as e:
+        print(f"Error in all_data route: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
